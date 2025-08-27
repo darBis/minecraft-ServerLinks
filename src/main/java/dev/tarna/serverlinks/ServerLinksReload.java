@@ -19,8 +19,7 @@ public class ServerLinksReload implements TabExecutor {
             sender.sendMessage("§cUsage: /serverlinks reload");
             return true;
         }
-        this.plugin.reloadConfig();
-        this.plugin.loadLinks();
+        this.plugin.reload();
         sender.sendMessage("§eServerLinks have been reloaded!");
         return true;
     }

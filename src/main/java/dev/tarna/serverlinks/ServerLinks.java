@@ -1,11 +1,15 @@
 package dev.tarna.serverlinks;
 
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ServerLinks.ServerLink;
 import org.bukkit.ServerLinks.Type;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -22,6 +26,9 @@ public final class ServerLinks extends JavaPlugin {
         new ServerLinksReload(this);
         loadLinks();
 
+        final LifecycleEventManager<Plugin> lifecycleManager = this.getLifecycleManager();
+        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS, this::onReload);
+
         getLogger().info("ServerLinks has been enabled in " + (System.currentTimeMillis() - now) + "ms");
     }
 
@@ -35,6 +42,23 @@ public final class ServerLinks extends JavaPlugin {
         getLogger().info("ServerLinks has been disabled in " + (System.currentTimeMillis() - now) + "ms");
     }
 
+    private void onReload(ReloadableRegistrarEvent<Commands> event) {
+        // handle server reload
+        if (event.cause() == ReloadableRegistrarEvent.Cause.RELOAD) {
+            getLogger().info("Server reload detected, reloading ServerLinks configuration...");
+            reload();
+        }
+    }
+
+    /**
+     * Reload the plugin configuration and regenerate server links
+     */
+    public void reload() {
+        reloadConfig();
+        loadLinks();
+        getLogger().info("ServerLinks have been reloaded!");
+    }
+
     Type getKnowType(String key) {
         try {
             return Type.valueOf(key);
@@ -43,7 +67,7 @@ public final class ServerLinks extends JavaPlugin {
         }
     }
 
-    void loadLinks() {
+    private void loadLinks() {
 
         var serverLinks = Bukkit.getServerLinks();
 
@@ -74,4 +98,6 @@ public final class ServerLinks extends JavaPlugin {
 
         getLogger().info("Loaded " + keys.size() + " links");
     }
+
+
 }
